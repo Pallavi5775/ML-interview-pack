@@ -1,0 +1,9 @@
+In a Hybrid RAG, Neo4j handles structured knowledge graphs (entities + relations), while Weaviate stores semantic vectors (text embeddings).
+To make this powerful, you need practical Cypher (Neo4j) and GraphQL/gRPC (Weaviate) queries that:
+retrieve, explore, or rank data,
+verify embeddings,
+check relationships,
+perform hybrid fusion (semantic + symbolic),
+monitor health & schema.
+
+

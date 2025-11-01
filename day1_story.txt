@@ -1,0 +1,53 @@
+The daily returns of stocks is tracked on daily basis - A cron which runs daily at 12 midnight and 
+fetches the stocks. So closing prices are converted to pct_change with pandas library.
+Create features using sciPy lib to calc features 
+like moving average rsi bollinger bands 
+and check if its actually normal distribution using shapiro kurtosis skew
+use Garch model or std dev to calc volatility 
+and then feed this to the using sikit learn to models like lstm xgboost and random foerst.
+
+The daily returns are tracked.
+The bell curve in blue - Its normal distribution of data — the world of natural variation.
+It’s how we can understand volatility, calculate Value-at-Risk, 
+and measure the portfolio's typical performance.
+*AI connection:* These returns become **features** for the predictive models. 
+This is used to detect when the market is calm, and when turbulence is coming.
+
+
+Every trade the algorithm makes is a test — success or failure,
+profit or loss. Out of ten trades, some win, some don’t. 
+That's the **Binomial world**.”
+It doesn't just count wins; it learns **why** trades succeed.
+Each trade's probability of success becomes a signal. 
+We can feed this data into a ML classifier that predicts whether the next trade is worth taking.
+*AI connection:* Supervised learning is used — 
+models trained on historical trade data — to improve strategy accuracy, filter out noise, 
+and adapt to evolving market regimes.
+
+
+
+Now, let’s talk about risk. Defaults, system failures, fraud attempts — 
+these events are rare but critical.
+It can be modelled with the **Poisson distribution** —
+events that happen independently over time, at a constant average rate.”
+The AI platform monitors these counts in real time.
+When the frequency suddenly exceeds what’s expected,
+the anomaly detection module triggers alerts 
+before small cracks become systemic risks.”
+
+*AI connection:*
+These Poisson-driven risk counts feed into predictive models 
+— Poisson regression, anomaly detectors, and neural networks 
+— that forecast crisis likelihood and allocate capital defensively.
+
+So visually:
+Skyblue curve (Normal): smooth bell shape — infinite possible values
+Lightgreen dots (Binomial): probabilities for 0–10 — discrete trials
+Orange dots (Poisson): right-skewed counts — event frequency data
+
+
+| Data Type | Example | Statistical Model | ML Extension | Business Use |
+|------------|----------|------------------|---------------|---------------|
+| Continuous | Returns | Normal | Regression, LSTM | Predict volatility, returns |
+| Binary | Win/Loss | Binomial | Classification | Trade recommendation |
+| Count | Defaults, fraud | Poisson | Poisson regression, anomaly detection | Risk forecasting |

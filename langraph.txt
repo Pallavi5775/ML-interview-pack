@@ -1,0 +1,141 @@
+🧩 1. Data Preparation — “Raw Text → Cleaned Chunks”
+Goal
+
+Transform scraped HTML/text into clean, semantically meaningful document chunks.
+
+Steps
+
+Pre-process scraped text
+
+Remove HTML tags, ads, footers, “Sign Up” sections.
+
+Normalize quotes, fix encoding, merge broken lines.
+
+Segment by logical units (headings, sections, paragraphs).
+
+Chunk using LangChain’s RecursiveCharacterTextSplitter or sentence-aware splitter
+
+chunk_size ≈ 500–1000 chars, overlap ≈ 10–20 %.
+
+Add metadata for each chunk
+
+source_url, title, timestamp, topic.
+
+📦 Output → A list of clean text chunks with metadata.
+
+🧠 2. Entity & Relation Extraction — “Text → Triples”
+Goal
+
+Identify key entities (people, orgs, events, topics) and relations to form the Knowledge Graph.
+
+Steps
+
+Use an LLM (via LangChain LLMChain) with a structured prompt:
+
+Output → list of triples (subject, relation, object).
+
+Optionally perform entity normalization (lower-case, deduplicate, map aliases).
+
+Store intermediate triples in JSON/CSV before ingestion.
+
+📦 Output → Structured triples ready for graph ingestion.
+
+🕸️ 3. Knowledge Graph Construction — “Triples → Neo4j”
+Goal
+
+Load entities and relations into Neo4j to enable structured graph queries.
+
+Steps
+
+Define node types (e.g. Person, Organization, Event, Concept, Chunk).
+
+Define relationship types (MENTIONS, WORKS_FOR, CAUSES, REFERS_TO, etc.).
+
+Ingest triples into Neo4j using Cypher MERGE.
+
+Link each text chunk node to its extracted entities ((Chunk)-[:ABOUT]->(Entity)).
+
+📦 Output → Neo4j Knowledge Graph representing your scraped knowledge.
+
+🔍 4. Vector Index Creation — “Chunks → Weaviate”
+Goal
+
+Enable semantic similarity retrieval for unstructured content.
+
+Steps
+
+Compute embeddings using OpenAI or Hugging Face models.
+
+Push embeddings + metadata to a Weaviate instance.
+
+Create class (e.g. WebChunk) with vector indexing enabled.
+
+Verify vector counts and metadata filters work.
+
+📦 Output → Weaviate Vector DB containing all chunks.
+
+⚡ 5. Hybrid Retrieval Logic
+Goal
+
+Combine structured retrieval (Neo4j) + semantic retrieval (Weaviate).
+
+Strategy
+Question Type	Retrieval Path
+“Who / What / How connected to X?”	Graph → GraphCypherQAChain (Neo4j)
+“Summarize / Explain / Compare topics”	Vector → Weaviate semantic search
+“Complex or multi-hop”	Run both → fuse answers
+
+📦 Output → Two complementary result sets: graph facts + context text.
+
+🧩 6. Fusion / Synthesis LLM Step
+Goal
+
+Feed both results to a reasoning LLM and generate a unified answer.
+
+Steps
+
+Build a fusion prompt:
+
+Inputs = graph results + semantic context + user question.
+
+LLM synthesizes into a final natural-language answer.
+
+Optionally store Q→A pairs for evaluation and refinement.
+
+📦 Output → Final hybrid RAG response.
+
+🤖 7. LangGraph Agent Orchestration
+Goal
+
+Turn the entire pipeline into a multi-step, stateful workflow.
+
+Nodes / Tools
+Node Name	Function
+extract_entities	From chunk → triples
+ingest_graph	Load triples → Neo4j
+embed_weaviate	Store chunks → Weaviate
+graph_query	Structured retrieval
+semantic_query	Weaviate retrieval
+fusion_answer	Combine & answer
+
+LangGraph lets you define edges between nodes and maintain memory/state for complex or looping tasks (e.g., “if no entity found → re-extract”).
+
+
+
+
+Integration	Purpose
+LangChain + Weaviate	Semantic retrieval (vector store)
+LangChain + Neo4j	Graph reasoning (structured knowledge)
+LangChain + OpenAI / Azure OpenAI	LLM + Embeddings
+LangChain + Redis / Postgres / Pinecone	Alternative vector stores
+LangChain + LangGraph	Complex, stateful agent orchestration (next section)
+
+
+| Stage               | Task                                     | Tool                          |
+| ------------------- | ---------------------------------------- | ----------------------------- |
+| 🧠 Basics           | Create PromptTemplate + LLMChain         | LangChain                     |
+| 📄 RAG              | Load → Chunk → Embed → Retrieve → Answer | LangChain                     |
+| 🕸 Knowledge Graph  | Extract triples + store in Neo4j         | LangChain GraphCypherQAChain  |
+| ⚡ Hybrid RAG        | Query Neo4j + Weaviate → Fuse Answer     | LangChain + LLMChain          |
+| 🤖 Agentic Workflow | Multi-step stateful pipeline             | LangGraph                     |
+| 🧱 Production       | Add observability, retries, checkpoints  | LangGraph Runtime + LangSmith |

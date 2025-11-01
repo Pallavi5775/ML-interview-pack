@@ -1,0 +1,84 @@
+Instrument per-component latency (Neo4j, Weaviate, LLM) and build dashboards.
+what is this exactly?
+If something is not working, we have to find the component in the architecture which 
+is the bottleneck and tune in that.
+
+Here we got to measure what is the life time of a hybrid query for each component
+(LLM, vector DB, graph DB, network) and push that measurement into a metric system.
+
+In this process, one needs to keep tabs of the below stuffs:
+
+request_id, timestamp
+total request latency
+Neo4j latency (ms)
+Weaviate latency (ms)
+LLM latency (ms) and LLM model & token counts
+cache hit / miss
+success / error codes
+
+Where to push: Prometheus (metrics), then Grafana dashboards + alerting. 
+Also push logs (structured) to a logging sink (ELK/Azure Monitor).
+
+Implement async API with concurrent gather pattern.
+----
+Run Neo4j + Weaviate concurrently then
+Compose prompt and call LLM
+
+Implement LLM semaphore pool (size = planned LLM slots).
+-----
+
+Enable Redis cache for query results & embedding cache.
+In which layer to place this?
+Query-result cache (API layer)
+Store the context and question in cache before retrievals.
+Check cache first; on a hit return immediately.
+
+Embedding cache (ingestion layer):
+Key: hash(chunk_text) → embedding vector (serialized)
+Placed in ingestion/embedding service (or shared cache service). Saves embedding API calls/costs.
+
+Weaviate NN result cache (optional):
+Cache top-k results for hot queries (small TTL). Useful for repeated queries.
+
+Deploy Neo4j with read replicas; verify read routing.
+what about write replicas?
+
+First thing first we can set the default access mode to create two connection strings - 
+one for handling core nodes where the writes occur and another for reads replicas
+
+Deploy Weaviate with 3+ replicas; tune HNSW params.
+what about read writes
+
+Weaviate supports clustering: replicas help distribute read traffic and increase availability. Writes are handled by leader(s) and replicated.
+Typical pattern: have N replicas for redundancy; reads can be load-balanced across replicas.
+Writes may have a slightly higher latency since they are replicated; Weaviate handles eventual consistency depending on configuration.
+
+
+Implement backpressure: queue new requests or return 429.
+what is backpressure?
+backpressure is a system mechanism that prevents overload by slowing down 
+or rejecting incoming traffic when internal capacity is exhausted. 
+It prevents cascading failures.
+
+Two main strategies:
+Queue & serve: Enqueue incoming requests (bounded queue).
+Workers take tasks from queue. 
+When queue full, reject (429) or return a polite “try later” response.
+
+Reject fast (429): 
+If system overloaded (LLM semaphore exhausted + request queue length > threshold), 
+respond with 429 Retry-After. 
+This is simpler and keeps system responsive.
+
+Run 100 QPS load test with realistic queries, iterate tuning.
+----
+
+Implement circuit breaker + fallback (cached/short answer).
+Give the logic of circuit breaker?
+Dont repeatedly calling a failing dependency (e.g., LLM) 
+— temporarily “open” the circuit and use fallback.
+
+Add alerts for queue depth, p95 latency, LLM error rate, and connection exhaustion.
+----
+
+

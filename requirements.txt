@@ -1,0 +1,16 @@
+langchain 
+langchain-core 
+langchain-community 
+langchain-openai
+langchain-text-splitters
+openai
+weaviate-client
+langchain-weaviate
+neo4j
+fastapi
+uvicorn[standard]
+redis
+prometheus_client
+pydantic
+tiktoken
+langraph

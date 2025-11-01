@@ -1,0 +1,19 @@
+setx OPENAI_API_KEY ''
+setx NEO4J_URI "bolt://localhost:7687"
+setx NEO4J_USER "neo4j"
+setx NEO4J_PASS "password"
+setx WEAVIATE_URL "http://localhost:8080"
+setx REDIS_URL "redis://localhost:6379/0"
+
+
+
+uvicorn hybrid_rag_langchain_langgraph:app --host 0.0.0.0 --port 8000 --reload
+
+
+Invoke-RestMethod -Uri "http://10.255.255.254:8000/hybrid_query" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"question": "What did Jamie Dimon say about market risk?"}'
+
+git log --oneline --graph --decorate
+git rebase -i 8cd074f8
